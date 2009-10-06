@@ -1,0 +1,10 @@
+{
+  "type": "standalone",
+  "CoreletLibrary": "@ServiceLibrary@",
+  "strings": { 
+    "en": { 
+        "title": "Local Document Database", 
+		"summary": "Allows you to store and efficiently search through large amounts of information on your computer."
+    }
+  }
+}
