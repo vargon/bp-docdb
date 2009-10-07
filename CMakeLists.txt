@@ -41,18 +41,21 @@ LINK_DIRECTORIES(
 SET(SRCS src/service.cpp)
 SET(HDRS src/service.h)
 
-IF (WIN32)
-   FILE(GLOB_RECURSE OS_SRCS "external/*.h" "external/*.hh")
-ELSE()
-   FILE(GLOB_RECURSE OS_SRCS "external/*.h" "external/*.hh")
-ENDIF ()
+FILE(GLOB_RECURSE OS_SRCS "external/*.h" "external/*.hh")
 
 # add required OS libs here
 SET(OSLIBS)
 
+IF (APPLE)
+  FIND_LIBRARY(CARBON_LIBRARY Carbon)
+  MARK_AS_ADVANCED(CARBON_LIBRARY)
+  SET(OSLIBS ${CARBON_LIBRARY})
+ENDIF ()
+
+
 ADD_LIBRARY(${serviceName} MODULE ${EXT_SRCS} ${SRCS} ${OS_SRCS} ${HDRS})
 
-TARGET_LINK_LIBRARIES(${serviceName} clucene-core ${OSLIBS})
+TARGET_LINK_LIBRARIES(${serviceName} clucene ${OSLIBS})
 
 # create service directory
 FILE(MAKE_DIRECTORY ${outputDir})
