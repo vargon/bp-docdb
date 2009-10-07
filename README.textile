@@ -1,0 +1,23 @@
+h2. What is this?
+
+This, our friends, is an experiment in client side storage.
+SQL on the client is cute, surely, but is there room for something else?
+What if we had an ultra-fast document storage system optimized for 
+full text search and retrival?  Couldn't we have both simplicity and
+power?  Dunno, let's find out.
+
+h2. Building
+
+(NOTE: osx only for now)
+
+1. git clone ...
+2. git submodule init && git submodule update
+3. cd external/ && ./build.rb
+4. cd ../ 
+5. mkdir build && cd build && cmake ..
+6. make
+
+Built service lives in build/SearchDB
+
+
+
