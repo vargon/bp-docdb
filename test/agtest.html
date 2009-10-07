@@ -6,7 +6,7 @@
 Config = function()
 {
 	var me = {};
-	
+
 	me.corelets = [ {service:'SearchDBService', version:null, minversion:'1.0'} ];
 
 	return me;
@@ -14,6 +14,11 @@ Config = function()
 
 BPUtils = function()
 {
+    function output(msg) {
+      //alert(msg);
+      console.log(msg);
+    };
+
 	var me = {};
 	
 	me.init = function()
@@ -26,7 +31,7 @@ BPUtils = function()
 	
 	me.onInit = function(installed)
 	{
-		alert("BP inited successfully");
+		output("BP inited successfully");
 		me.initAndLoadCorelets();
 	}
 	
@@ -37,13 +42,13 @@ BPUtils = function()
 			me.init();
 			return;
 		}
-		alert("Loading corelets");
+		output("Loading corelets");
 		for(var corelet in Config.corelets)
 		{
-			alert("Is " + Config.corelets[corelet] + " loaded?");
+			output("Is " + Config.corelets[corelet] + " loaded?");
 			if(!BrowserPlus.isServiceLoaded(Config.corelets[corelet].service))
 			{
-				alert("Loading: " + Config.corelets[corelet].service);
+				output("Loading: " + Config.corelets[corelet].service);
 				BrowserPlus.require(
 					{
 						services: [ Config.corelets[corelet] ],
@@ -53,36 +58,36 @@ BPUtils = function()
 				);
 			}
 		}
-		alert("Finished loading");
+		output("Finished loading");
 	}
 	
 	me.onProgress = function(progress)
 	{
-		alert(progress);
+		output(progress);
 	}
 	
 	me.onCoreletLoaded = function(result)
 	{
 		if(result.success)
 		{
-			alert("Success");
+			output("Success");
 			BrowserPlus.SearchDBService.init({}, me.onSearchInit);
 		}
 		else
 		{
-			alert("Not success: " + result.error + " " + result.verboseError);
+			output("Not success: " + result.error + " " + result.verboseError);
 		}
 	}
 	
 	me.onSearchInit = function()
 	{
-		alert("onSearchInit");
+		output("onSearchInit");
 		BrowserPlus.SearchDBService.openIndex({dbName:"testIndex"}, me.onOpenIndex);
 	}
 	
 	me.onOpenIndex = function()
 	{
-		alert("onOpenIndex");
+		output("onOpenIndex");
 		BrowserPlus.SearchDBService.addDocument(
 			{ subject : "Try V14AGRA!", body: "You don't know what you're missing" },
 			me.onAddDocument);
@@ -90,24 +95,24 @@ BPUtils = function()
 	
 	me.onAddDocument = function()
 	{
-		alert("onAddDocument");
+		output("onAddDocument");
 		BrowserPlus.SearchDBService.closeIndex({}, me.onCloseIndex);
 	}
 	
 	me.onCloseIndex = function()
 	{
-		alert("onCloseIndex");
+		output("onCloseIndex");
 		BrowserPlus.SearchDBService.search({query:"what", fields:["body"]}, me.onSearch);
 	}
 	
 	me.onSearch = function(results)
 	{
-		alert("onSearch");
+		output("onSearch");
 		for(var i in results)
 		{
-			alert(i.body);
+			output(i.body);
 		}
-		alert("DONE!");
+		output("DONE!");
 	}
 	
 	return me;
