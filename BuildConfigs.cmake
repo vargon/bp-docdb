@@ -77,7 +77,7 @@ ELSE ()
       ADD_DEFINITIONS(-DLINUX -D_LINUX -DXP_LINUX)
     ENDIF()
 
-    SET(CMAKE_CXX_FLAGS "-Wall ${isysrootFlag} ${minVersionFlag}")
+    SET(CMAKE_CXX_FLAGS "-Wall ${isysrootFlag} ${minVersionFlag} -arch i386")
     SET(CMAKE_CXX_FLAGS_DEBUG "-DDEBUG -g")
     SET(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -Os")
     SET(CMAKE_MODULE_LINKER_FLAGS_RELEASE "-Wl,-x")
