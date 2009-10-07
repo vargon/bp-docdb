@@ -59,6 +59,11 @@ begin
       ENV['CXXFLAGS'] = ENV['CXXFLAGS'].to_s + $darwinCompatCompileFlags
       system("sh ./configure --enable-static --disable-shared --prefix=#{$installDir}")
       system("make install")
+
+      # for some reason, the clucene make install step drops clucene-config.h
+      # into lib/ !?  let's copy it!
+      FileUtils.cp(File.join($libInstallDir, "CLucene", "clucene-config.h"),
+                   File.join($headerInstallDir, "CLucene"))
     end
   end
 rescue RuntimeError => err
