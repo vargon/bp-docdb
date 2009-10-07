@@ -1,0 +1,10 @@
+{
+  "type": "standalone",
+  "CoreletLibrary": "@ServiceLibrary@",
+  "strings": { 
+    "en": { 
+      "title": "Lucene Search Engine", 
+      "summary": "Searches and indexes documents using cLucene"
+    }
+  }
+}
