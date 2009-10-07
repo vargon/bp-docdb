@@ -21,7 +21,9 @@ SearchDBService::~SearchDBService()
 
 void SearchDBService::init(const bplus::service::Transaction& tran, const bplus::Map& args)
 {
+    log(BP_INFO, "initializing search service");
 	sa = new lucene::analysis::standard::StandardAnalyzer();
+	tran.complete( bplus::Null() );
 }
 
 void SearchDBService::openIndex(const bplus::service::Transaction& tran, const bplus::Map& args)
@@ -34,6 +36,8 @@ void SearchDBService::openIndex(const bplus::service::Transaction& tran, const b
 	indexPath = (dataDir+"/"+dbName);
 	
 	writer = new lucene::index::IndexWriter(indexPath.c_str(), sa, true);
+
+	tran.complete( bplus::Null() );
 }
 
 void SearchDBService::addDocument(const bplus::service::Transaction& tran, const bplus::Map& args)
@@ -48,16 +52,21 @@ void SearchDBService::addDocument(const bplus::service::Transaction& tran, const
 	}
 
 	writer->addDocument(&doc);
+
+	tran.complete( bplus::Null() );
 }
 
 void SearchDBService::closeIndex(const bplus::service::Transaction& tran, const bplus::Map& args)
 {
 	writer->optimize();
 	writer->close();
+	tran.complete( bplus::Null() );
 }
 
 void SearchDBService::search(const bplus::service::Transaction& tran, const bplus::Map& args)
 {
+    log(BP_INFO, "search() invoked");
+
 	lucene::search::IndexSearcher searcher(indexPath.c_str());
 	
 	std::wstring query;
@@ -91,4 +100,5 @@ void SearchDBService::search(const bplus::service::Transaction& tran, const bplu
 	searcher.close();
 
 	tran.complete( hitList );
+    log(BP_INFO, "search() returned hits");
 }
