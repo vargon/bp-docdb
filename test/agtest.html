@@ -1,7 +1,11 @@
 <html>
 <head>
 <script src="http://bp.yahooapis.com/2.4.20/browserplus.js"></script>
+<script type="text/javascript" src="http://yui.yahooapis.com/3.0.0/build/yui/yui-min.js"></script>
 <script>
+
+YUI().use('dump', function(Y)
+{
 
 Config = function()
 {
@@ -81,34 +85,34 @@ BPUtils = function()
 	
 	me.onSearchInit = function()
 	{
-		output("onSearchInit");
+		output("onSearchInit: " + Y.dump(Y.Array(arguments)));
 		BrowserPlus.SearchDBService.openIndex({dbName:"testIndex"}, me.onOpenIndex);
 	}
 	
 	me.onOpenIndex = function()
 	{
-		output("onOpenIndex");
+		output("onOpenIndex: " + Y.dump(Y.Array(arguments)));
 		BrowserPlus.SearchDBService.addDocument(
-			{ subject : "Try V14AGRA!", body: "You don't know what you're missing" },
+			{ doc: { 'subject': "Try V14AGRA!", 'body': "You do not know what you are missing" } },
 			me.onAddDocument);
 	}
 	
 	me.onAddDocument = function()
 	{
-		output("onAddDocument");
+		output("onAddDocument: " + Y.dump(Y.Array(arguments)));
 		BrowserPlus.SearchDBService.closeIndex({}, me.onCloseIndex);
 	}
 	
 	me.onCloseIndex = function()
 	{
-		output("onCloseIndex");
-		BrowserPlus.SearchDBService.search({query:"what", fields:["body"]}, me.onSearch);
+		output("onCloseIndex: " + Y.dump(Y.Array(arguments)));
+		BrowserPlus.SearchDBService.search({query:"missing", fields:["body"]}, me.onSearch);
 	}
 	
 	me.onSearch = function(results)
 	{
-		output("onSearch");
-		for(var i in results)
+		output("onSearch: " + Y.dump(Y.Array(arguments)));
+		for(var i in results.value)
 		{
 			output(i.body);
 		}
@@ -124,7 +128,7 @@ BPUtils = function()
 	bpUtils.init();
 }());
 
-
+});
 
 </script>
 </head>
