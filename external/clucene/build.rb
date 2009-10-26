@@ -57,7 +57,7 @@ begin
     else
       ENV['CFLAGS'] = ENV['CFLAGS'].to_s + $darwinCompatCompileFlags
       ENV['CXXFLAGS'] = ENV['CXXFLAGS'].to_s + $darwinCompatCompileFlags
-      system("sh ./configure --enable-static --disable-shared --prefix=#{$installDir}")
+      system("sh ./configure --enable-static --disable-shared --prefix=#{$installDir} --enable-ascii")
       system("make install")
 
       # for some reason, the clucene make install step drops clucene-config.h

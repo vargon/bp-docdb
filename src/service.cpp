@@ -16,6 +16,24 @@ CL_NS_USE(document);
 CL_NS_USE(search);
 CL_NS_USE(queryParser);
 
+#ifdef _UNICODE
+#define W2U(x)      bplus::strutil::wideToUtf8(x)
+#define U2W(x)      bplus::strutil::utf8ToWide(x)
+#define T2W(x)      (x)
+#define T2U         W2U
+#define W2T(x)      (x)
+#define U2T         U2W
+typedef std::wstring tstring;
+#else
+#define U2W(x)      bplus::strutil::utf8ToWide(x)
+#define W2U(x)      bplus::strutil::wideToUtf8(x)
+#define T2W         U2W
+#define T2U(x)      (x)
+#define W2T         W2U
+#define U2T(x)      (x)
+typedef std::string tstring;
+#endif
+
 SearchDBService::SearchDBService() : Service(), sa(0), writer(0)
 {
 }
@@ -32,47 +50,7 @@ void SearchDBService::init(const bplus::service::Transaction& tran, const bplus:
     log(BP_INFO, "initializing search service: [" __DATE__ " " __TIME__ "]");
     log(BP_INFO, __FUNCTION__);
 	sa = new StandardAnalyzer();
-    
-    /**/
-    StandardAnalyzer s;
-	const std::string dataDir(context("data_dir"));
-    const std::string indexPath(dataDir+"/mytest");
-    IndexWriter iw(indexPath.c_str(), sa, true);
-    
-    std::wstring k(L"body");
-    std::wstring v(L"test value for the missing body");
-    Document d;
-    Field* f = new Field(k.c_str(), v.c_str(), Field::STORE_YES|Field::INDEX_TOKENIZED);
-    d.add(*f);
-    
-    iw.addDocument(&d);
-    iw.optimize();
-    iw.close();
-    
-    IndexSearcher is(indexPath.c_str());
-    
-    Query* q = QueryParser::parse(L"value", L"body", &s);
-    
-    if(q)
-    {
-        log(BP_INFO, "q has a value!");
-    }
 
-	lucene::search::Hits* hits = is.search(q);
-	
-    log(BP_INFO, "did the query");
-	for(int i = 0; i < hits->length(); ++i)
-	{
-        log(BP_INFO, "Checking document");
-
-        std::wstring val(hits->doc(i).get(L"body"));
-        
-        log(BP_INFO, "Got value: " + bplus::strutil::wideToUtf8(val));
-	}
-	
-	is.close();
-    /**/
-    
 	tran.complete( bplus::Null() );
 }
 
@@ -90,7 +68,7 @@ void SearchDBService::openIndex(const bplus::service::Transaction& tran, const b
 	
 	indexPath = (dataDir+"/"+dbName);
 	
-//	writer = new IndexWriter(indexPath.c_str(), sa, true);
+	writer = new IndexWriter(indexPath.c_str(), sa, true);
 
 	tran.complete( bplus::Null() );
 }
@@ -99,8 +77,6 @@ void SearchDBService::addDocument(const bplus::service::Transaction& tran, const
 {
     SCOPED_LOCK_MUTEX(myMutex);
     log(BP_INFO, __FUNCTION__);
-    
-    //IndexWriter iw(indexPath.c_str(), sa, true);
     
 	Document* doc = new Document();
     
@@ -115,32 +91,29 @@ void SearchDBService::addDocument(const bplus::service::Transaction& tran, const
 	bplus::Map::Iterator it(m);
     
     log(BP_INFO, "Got iterator");
-    
-    Field* f = new Field(L"body", L"You have no idea what you're missing. Potentially.", Field::STORE_YES|Field::INDEX_TOKENIZED);
-    
-    doc->add(*f);
-    /*
+
+	/**/
     typedef std::vector<Field*> FieldVector;
     FieldVector fieldVec;
     
     typedef std::map<TCHAR*,TCHAR*> StringMap;
     StringMap stringMap;
     
-	while(const char* key = it.nextKey())
+	while(const char* ckey = it.nextKey())
 	{
-        std::string val(m[key]);
+        std::string key(ckey);
+        std::string val(m[ckey]);
         log(BP_INFO, key);
         log(BP_INFO, val.c_str());
-        std::wstring wkey(bplus::strutil::utf8ToWide(key));
-        std::wstring wval(bplus::strutil::utf8ToWide(val));
-        TCHAR* tkey = new TCHAR[wkey.length()+1];
-        TCHAR* tval = new TCHAR[wval.length()+1];
-        //wcscpy(tkey, wkey.c_str());
-        //wcscpy(tval, wval.c_str());
-        memcpy(tkey, wkey.c_str(), (wkey.length()+1)*sizeof(TCHAR));
-        memcpy(tval, wval.c_str(), (wval.length()+1)*sizeof(TCHAR));
+
+        TCHAR* tkey = new TCHAR[key.length()+1];
+        TCHAR* tval = new TCHAR[val.length()+1];
+        _tcscpy(tkey, U2T(key).c_str());
+        _tcscpy(tval, U2T(val).c_str());
+        
         log(BP_INFO, (const char*)tkey);
         log(BP_INFO, (const char*)tval);
+        
         stringMap[tkey] = tval;
         log(BP_INFO, "Created map");
 	}
@@ -148,9 +121,8 @@ void SearchDBService::addDocument(const bplus::service::Transaction& tran, const
     for(StringMap::iterator smi = stringMap.begin(); smi != stringMap.end(); ++smi)
     {
         log(BP_INFO, "Creating Fields");
-        log(BP_INFO, "Foo: " + bplus::strutil::wideToUtf8(smi->first));
-        log(BP_INFO, (const char*)smi->first);
-        log(BP_INFO, (const char*)smi->second);
+        log(BP_INFO, (const char*)smi->first); // will only print first char
+        log(BP_INFO, (const char*)smi->second); // will only print first char
         Field* fld = new Field(smi->first, smi->second, Field::STORE_YES|Field::INDEX_TOKENIZED);
         fieldVec.push_back(fld);
     }
@@ -159,19 +131,23 @@ void SearchDBService::addDocument(const bplus::service::Transaction& tran, const
         log(BP_INFO, "Adding fields Fields");
         doc->add(**fi);
     }
-    */
+    /**/
 
     log(BP_INFO, "Finished creating document");
-	//iw.addDocument(doc);
     writer->addDocument(doc);
     log(BP_INFO, "Added document");
+
+	for(FieldVector::iterator fi = fieldVec.begin(); fi != fieldVec.end(); ++fi)
+	{
+		delete (*fi);
+	}
+
+	for(StringMap::iterator smi = stringMap.begin(); smi != stringMap.end(); ++smi)
+	{
+		delete [] (smi->first);
+		delete [] (smi->second);
+	}
     
-    //iw.optimize();
-    //iw.close();
-
-    //writer->optimize();
-    //log(BP_INFO, "Optimized document");
-
 	tran.complete( bplus::Null() );
 }
 
@@ -194,20 +170,18 @@ void SearchDBService::search(const bplus::service::Transaction& tran, const bplu
     
 	lucene::search::IndexSearcher searcher(indexPath.c_str());
 	
-    std::string query(args["query"]);
-	std::wstring wquery(bplus::strutil::utf8ToWide(query));
+	tstring query(U2T(args["query"]));
 
     typedef std::vector<const bplus::Object*> obvector;
     obvector fieldList = args["fields"];
 
-    std::string fieldName(std::string(**(fieldList.begin())));
-    std::wstring wfieldName(bplus::strutil::utf8ToWide(fieldName));
+    tstring fieldName(U2T(std::string(**(fieldList.begin()))));
 	
-    log(BP_INFO, ("about to query " + query + ", " + fieldName));
-    //lucene::queryParser::QueryParser qp(wfieldName.c_str(), sa);
-    //lucene::search::Query* q = qp.parse(wquery.c_str());
-	//lucene::search::Query* q = lucene::queryParser::QueryParser::parse(wquery.c_str(), wfieldName.c_str(), sa);
-	lucene::search::Query* q = lucene::queryParser::QueryParser::parse(L"missing", L"body", sa);
+    log(BP_INFO, ("about to query " + T2U(query) + ", " + T2U(fieldName)));
+    log(BP_INFO, (T2U(query).c_str()));
+    log(BP_INFO, (T2U(fieldName).c_str()));
+
+	lucene::search::Query* q = lucene::queryParser::QueryParser::parse(query.c_str(), fieldName.c_str(), sa);
 
     if(q)
         log(BP_INFO, "Set up the query");
@@ -229,12 +203,12 @@ void SearchDBService::search(const bplus::service::Transaction& tran, const bplu
 		for(obvector::const_iterator it = fieldList.begin(); it != fieldList.end(); ++it)
 		{
 			std::string key(**it);
-			std::wstring wkey(bplus::strutil::utf8ToWide(key));
+			tstring tkey(U2T(key));
 			
-			std::wstring wvalue = doc.get(wkey.c_str());
-            log(BP_INFO, (const char*)(wvalue.c_str()));
-			std::string value = bplus::strutil::wideToUtf8(wvalue);
-			map->add(key, new bplus::String(value.c_str()));
+			tstring value(doc.get(tkey.c_str()));
+            log(BP_INFO, (const char*)(value.c_str()));
+			//std::string value(bplus::strutil::wideToUtf8(wvalue));
+			map->add(key, new bplus::String(T2U(value).c_str()));
 		}
 		hitList.append(map);
 	}

@@ -7,16 +7,21 @@
  *
  */
 
-#if defined(MACOSX)
-#include <Carbon/Carbon.h>
-#endif
+//#if defined(MACOSX)
+//#include <Carbon/Carbon.h>
+//#endif
 
-#ifdef __OBJC__
-#import <Cocoa/Cocoa.h>
-#endif
+//#ifdef __OBJC__
+//#import <Cocoa/Cocoa.h>
+//#endif
 
 #include "bpservice/bpservice.h"
 #include "bputil/bpstrutil.h"
+
+#if defined(MACOSX)
+#define _ASCII
+#endif
+
 #include "CLucene.h"
 
 class SearchDBService : public bplus::service::Service
@@ -41,7 +46,7 @@ private:
     DEFINE_MUTEX(myMutex);
 };
 
-BP_SERVICE_DESC(SearchDBService, "SearchDBService", "1.0", "A searchable database based on Lucene")
+BP_SERVICE_DESC(SearchDBService, "SearchDBService", "1.0.0", "A searchable database based on Lucene")
 
 ADD_BP_METHOD(SearchDBService, init, "Initializes the Searchable Database")
 

@@ -106,7 +106,7 @@ BPUtils = function()
 	me.onCloseIndex = function()
 	{
 		output("onCloseIndex: " + Y.dump(Y.Array(arguments)));
-		BrowserPlus.SearchDBService.search({query:"missing", fields:["body"]}, me.onSearch);
+		BrowserPlus.SearchDBService.search({query:"missing", fields:["body","subject"]}, me.onSearch);
 	}
 	
 	me.onSearch = function(results)
@@ -114,7 +114,10 @@ BPUtils = function()
 		output("onSearch: " + Y.dump(Y.Array(arguments)));
 		for(var i in results.value)
 		{
-			output(i.body);
+		    for(var j in results.value[i])
+		    {
+		        output(j + ": " + results.value[i][j]);
+    	    }
 		}
 		output("DONE!");
 	}
