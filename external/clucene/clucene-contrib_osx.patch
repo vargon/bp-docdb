@@ -1,0 +1,82 @@
+--- clucene-contrib-0.9.16a/src/CLucene/highlighter.orig/TokenSources.cpp	2009-11-03 10:19:45.000000000 -0500
++++ clucene-contrib-0.9.16a/src/CLucene/highlighter/TokenSources.cpp	2009-11-03 10:47:14.000000000 -0500
+@@ -29,7 +29,7 @@
+ 		//knowing what type this is
+ 		TermPositionVector* tmp = NULL;
+ 		try{
+-			 tmp = (TermPositionVector*)tfv;
++            tmp = tfv->__asTermPositionVector();
+ 		}catch(...){
+ 			//ignore
+ 		}
+@@ -73,24 +73,24 @@
+     }     */   
+     //code to reconstruct the original sequence of Tokens
+     const TCHAR** terms=tpv->getTerms();          
+-    const int32_t* freq=tpv->getTermFrequencies();
++    const Array<int32_t>* freq=tpv->getTermFrequencies();
+ 	int32_t freqLen = tpv->size();
+ 
+     size_t totalTokens=0;
+ 	{
+ 		for (int32_t t = 0; t < freqLen; t++)
+-			totalTokens+=freq[t];
++			totalTokens+=(*freq)[t];
+ 	}
+ 
+     Token** tokensInOriginalOrder=NULL;
+ 	CLSetList<Token*,Token::OrderCompare>* unsortedTokens = NULL;
+     for (int32_t t = 0; t < freqLen; t++)
+     {
+-        TermVectorOffsetInfo** offsets=tpv->getOffsets(t);
++        Array<TermVectorOffsetInfo>* offsets=tpv->getOffsets(t);
+         if(offsets==NULL)
+             return NULL;
+         
+-        int32_t* pos=NULL;
++        Array<int32_t>* pos=NULL;
+ 		int32_t posLen=0;
+         if(tokenPositionsGuaranteedContiguous)
+         {
+@@ -107,11 +107,11 @@
+             //tokens NOT stored with positions or not guaranteed contiguous - must add to list and sort later
+             if(unsortedTokens==NULL)
+                 unsortedTokens=_CLNEW CLSetList<Token*,Token::OrderCompare>(false);
+-            for (int32_t tp=0; offsets[tp]!=NULL; tp++)
++            for (int32_t tp=0; tp < offsets->length; tp++)
+             {
+                 unsortedTokens->insert(_CLNEW Token(terms[t],
+-                    offsets[tp]->getStartOffset(),
+-                    offsets[tp]->getEndOffset()));
++                    (*offsets)[tp].getStartOffset(),
++                    (*offsets)[tp].getEndOffset()));
+             }
+         }
+         else
+@@ -124,9 +124,9 @@
+             //tokens stored with positions - can use this to index straight into sorted array
+             for (int32_t tp = 0; tp < posLen; tp++)
+             {
+-                tokensInOriginalOrder[pos[tp]]=_CLNEW Token(terms[t],
+-                        offsets[tp]->getStartOffset(),
+-                        offsets[tp]->getEndOffset());
++                tokensInOriginalOrder[(*pos)[tp]]=_CLNEW Token(terms[t],
++                        (*offsets)[tp].getStartOffset(),
++                        (*offsets)[tp].getEndOffset());
+             }                
+         }
+     }
+@@ -159,11 +159,11 @@
+ 	//todo:bad way of doing this...
+ 	TermPositionVector* tmp = NULL;
+ 	try{
+-		tmp = (TermPositionVector*) tfv; //check to see if tfv is a Tpv
++		tmp = tfv->__asTermPositionVector(); //check to see if tfv is a Tpv
+ 	}catch(...){}
+ 
+ 	if ( tmp != NULL ){
+-		TermPositionVector* tpv=(TermPositionVector*)reader->getTermFreqVector(docId,field);
++		TermPositionVector* tpv=(reader->getTermFreqVector(docId,field))->__asTermPositionVector();
+ 	    return getTokenStream(tpv);	        
+ 	}else{
+ 		TCHAR buf[250];
